@@ -1,0 +1,4 @@
+invoice_id,vendor,amount,date,description
+INV-001,Acme Inc.,125.00,2026-10-01,Office supplies
+INV-002,ACME LLC,125.00,2026-10-01,Possible repeat
+INV-003,Other Services,890.00,2026-09-01,Consulting
