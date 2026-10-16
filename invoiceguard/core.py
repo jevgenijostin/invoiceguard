@@ -27,7 +27,11 @@ class Invoice:
 
 
 def normalize_vendor(name: str) -> str:
-    """Remove punctuation, collapse spaces, and repeatedly strip trailing legal suffixes."""
+    """Normalize Unicode, remove punctuation, collapse spaces, and strip legal suffixes.
+
+    NFC unifies equivalent accent encodings without folding compatibility characters.
+    """
+    name = unicodedata.normalize("NFC", name)
     name = "".join(c for c in name.lower() if not unicodedata.category(c).startswith("P"))
     words = name.split()
     suffixes = {"inc", "llc", "ltd", "gmbh", "co", "corp", "corporation", "ag", "kg"}

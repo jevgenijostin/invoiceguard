@@ -2,6 +2,7 @@ import csv
 import json
 import subprocess
 import sys
+import unicodedata
 from dataclasses import replace
 from datetime import date
 from decimal import Decimal
@@ -43,6 +44,24 @@ def test_suffix(suffix):
     ("Inc Design", "inc design"), ("  A\t B\nC  ", "a b c"), ("LLC", ""), ("Müller GmbH", "müller")])
 def test_normalization(value, expected):
     assert normalize_vendor(value) == expected
+
+
+def test_duplicates_with_canonically_equivalent_vendors(tmp_path):
+    nfc = unicodedata.normalize("NFC", "Müller GmbH")
+    nfd = unicodedata.normalize("NFD", "Müller GmbH")
+    assert nfc != nfd
+    path = write_csv(tmp_path / "repro.csv", [
+        ["INV-1001", nfc, "490.00", "2026-03-01", ""],
+        ["INV-1002", nfd, "500.00", "2026-03-06", ""],
+    ])
+    rows, errors = read_csv(path)
+    assert not errors
+    pair, = find_duplicates(rows)
+    assert pair["left"]["invoice_id"] == "INV-1001"
+    assert pair["right"]["invoice_id"] == "INV-1002"
+    assert pair["severity"] == "MEDIUM"
+    assert pair["score"] == pytest.approx(0.6)
+    assert normalize_vendor(nfc) == normalize_vendor(nfd) == "müller"
 
 
 def test_similarity():
